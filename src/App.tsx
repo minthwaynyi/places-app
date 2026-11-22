@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import type { Place, User } from './types';
+import { LoginForm } from './components/LoginForm';
+import { SignupForm } from './components/SignupForm';
 
-type Place = {
-  ID: number;
-  Name: string;
-  Latitude: number;
-  Longitude: number;
-  UserID: number;
-};
+const STORAGE_KEY = 'places_app_user';
 
 const App = () => {
   const [places, setPlaces] = useState<Place[]>([]);
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  });
 
   useEffect(() => {
     const getAllPlaces = async () => {
@@ -22,8 +23,36 @@ const App = () => {
     getAllPlaces();
   }, []);
 
+  const handleAuthSuccess = (loggedInUser: User) => {
+    setUser(loggedInUser);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(loggedInUser));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
   return (
     <>
+      {user ? (
+        <div>
+          <p>
+            Logged in as <strong>{user.Name}</strong> (ID: {user.ID}){' '}
+            <button type="button" onClick={handleLogout}>
+              Log Out
+            </button>
+          </p>
+        </div>
+      ) : (
+        <div>
+          <LoginForm onLogin={handleAuthSuccess} />
+          <SignupForm onSignup={handleAuthSuccess} />
+        </div>
+      )}
+
+      <hr />
+
       <ul>
         {places.map((p) => (
           <li key={p.ID}>
@@ -31,6 +60,7 @@ const App = () => {
           </li>
         ))}
       </ul>
+
       <MapContainer
         style={{ height: '400px' }}
         center={[62.59, 29.77]}
