@@ -1,14 +1,28 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Place, User } from './types';
 import { LoginForm } from './components/LoginForm';
 import { SignupForm } from './components/SignupForm';
+import { EditPlaceForm } from './components/EditPlaceForm';
+import { DeletePlaceButton } from './components/DeletePlaceButton';
 
 const STORAGE_KEY = 'places_app_user';
 
+const FlyTo = ({ place }: { place?: Place }) => {
+  const map = useMap();
+  const lat = place?.Latitude;
+  const lng = place?.Longitude;
+  useEffect(() => {
+    if (lat !== undefined && lng !== undefined) map.flyTo([lat, lng], 14);
+  }, [lat, lng, map]);
+  return null;
+};
+
 const App = () => {
   const [places, setPlaces] = useState<Place[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : null;
@@ -16,9 +30,13 @@ const App = () => {
 
   useEffect(() => {
     const getAllPlaces = async () => {
-      const data = await fetch(import.meta.env.VITE_SERVER_URL + '/api/places');
-      const obj = await data.json();
-      setPlaces(obj);
+      try {
+        const res = await fetch(import.meta.env.VITE_SERVER_URL + '/api/places');
+        if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+        setPlaces(await res.json());
+      } catch (err) {
+        console.error('Failed to load places:', err);
+      }
     };
     getAllPlaces();
   }, []);
@@ -31,6 +49,21 @@ const App = () => {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const handleSelect = (id: number) => {
+    setSelectedId(id);
+    if (editingId !== id) setEditingId(null);
+  };
+
+  const handlePlaceSaved = (id: number, name: string) => {
+    setPlaces((prev) => prev.map((p) => (p.ID === id ? { ...p, Name: name } : p)));
+    setEditingId(null);
+  };
+
+  const handlePlaceDeleted = (id: number) => {
+    setPlaces((prev) => prev.filter((p) => p.ID !== id));
+    if (selectedId === id) setSelectedId(null);
   };
 
   return (
@@ -55,25 +88,66 @@ const App = () => {
 
       <ul>
         {places.map((p) => (
-          <li key={p.ID}>
-            {p.Name} ({p.Latitude.toFixed(4)}, {p.Longitude.toFixed(4)})
+          <li
+            key={p.ID}
+            onClick={() => handleSelect(p.ID)}
+            style={{
+              cursor: 'pointer',
+              fontWeight: p.ID === selectedId ? 'bold' : 'normal',
+              background: p.ID === selectedId ? '#fee2e2' : 'transparent',
+            }}
+          >
+            {user && editingId === p.ID ? (
+              <EditPlaceForm
+                place={p}
+                user={user}
+                onSaved={handlePlaceSaved}
+                onCancel={() => setEditingId(null)}
+              />
+            ) : (
+              <>
+                {p.Name} ({p.Latitude.toFixed(4)}, {p.Longitude.toFixed(4)})
+                {user && p.UserID === user.ID && p.ID === selectedId && (
+                  <>
+                    {' '}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingId(p.ID);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <DeletePlaceButton
+                      placeId={p.ID}
+                      user={user}
+                      onDeleted={handlePlaceDeleted}
+                    />
+                  </>
+                )}
+              </>
+            )}
           </li>
         ))}
       </ul>
 
-      <MapContainer
-        style={{ height: '400px' }}
-        center={[62.59, 29.77]}
-        zoom={13}
-      >
+      <MapContainer style={{ height: '400px' }} center={[62.59, 29.77]} zoom={13}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <FlyTo place={places.find((p) => p.ID === selectedId)} />
         {places.map((p) => (
-          <Marker key={p.ID} position={[p.Latitude, p.Longitude]}>
+          <CircleMarker
+            key={p.ID}
+            center={[p.Latitude, p.Longitude]}
+            radius={p.ID === selectedId ? 14 : 8}
+            pathOptions={{ color: p.ID === selectedId ? '#e11d48' : '#2563eb' }}
+            eventHandlers={{ click: () => handleSelect(p.ID) }}
+          >
             <Popup>{p.Name}</Popup>
-          </Marker>
+          </CircleMarker>
         ))}
       </MapContainer>
     </>
