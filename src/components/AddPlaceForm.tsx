@@ -4,6 +4,7 @@ import type { Place, User } from '../types';
 type AddPlaceFormProps = {
   user: User;
   selectedCoords: { lat: number; lng: number } | null;
+  onCoordsChange: (coords: { lat: number; lng: number } | null) => void;
   onPlaceAdded: (newPlace: Place) => void;
   onLocationFound: (coords: { lat: number; lng: number }) => void;
 };
@@ -11,20 +12,17 @@ type AddPlaceFormProps = {
 export const AddPlaceForm = ({
   user,
   selectedCoords,
+  onCoordsChange,
   onPlaceAdded,
   onLocationFound,
 }: AddPlaceFormProps) => {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [latitude, setLatitude] = useState(() =>
-    selectedCoords ? selectedCoords.lat.toFixed(6) : ''
-  );
-  const [longitude, setLongitude] = useState(() =>
-    selectedCoords ? selectedCoords.lng.toFixed(6) : ''
-  );
   const [status, setStatus] = useState('');
 
-  // Convert street address to coordinates using OpenStreetMap Nominatim
+  const latitude = selectedCoords ? selectedCoords.lat.toString() : '';
+  const longitude = selectedCoords ? selectedCoords.lng.toString() : '';
+
   const handleAddressSearch = async () => {
     if (!address.trim()) return;
     setStatus('Searching address...');
@@ -43,8 +41,6 @@ export const AddPlaceForm = ({
     const lat = parseFloat(results[0].lat);
     const lng = parseFloat(results[0].lon);
 
-    setLatitude(lat.toFixed(6));
-    setLongitude(lng.toFixed(6));
     onLocationFound({ lat, lng });
     setStatus('Address found! Enter a place name and click Add Place.');
   };
@@ -79,7 +75,7 @@ export const AddPlaceForm = ({
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        setStatus('Unauthorized. Your session may have expired; please log in again.');
+        setStatus('Unauthorized. Your session may have expired—please log in again.');
       } else {
         setStatus('Failed to add place. Check your inputs.');
       }
@@ -90,8 +86,6 @@ export const AddPlaceForm = ({
     onPlaceAdded(createdPlace);
     setName('');
     setAddress('');
-    setLatitude('');
-    setLongitude('');
     setStatus('Place added!');
   };
 
@@ -122,6 +116,8 @@ export const AddPlaceForm = ({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            pattern=".*\S+.*"
+            title="Place name cannot be empty or only spaces"
             required
           />
         </label>
@@ -134,7 +130,12 @@ export const AddPlaceForm = ({
             type="number"
             step="any"
             value={latitude}
-            onChange={(e) => setLatitude(e.target.value)}
+            onChange={(e) =>
+              onCoordsChange({
+                lat: parseFloat(e.target.value) || 0,
+                lng: selectedCoords?.lng ?? 0,
+              })
+            }
             required
           />
         </label>
@@ -147,7 +148,12 @@ export const AddPlaceForm = ({
             type="number"
             step="any"
             value={longitude}
-            onChange={(e) => setLongitude(e.target.value)}
+            onChange={(e) =>
+              onCoordsChange({
+                lat: selectedCoords?.lat ?? 0,
+                lng: parseFloat(e.target.value) || 0,
+              })
+            }
             required
           />
         </label>

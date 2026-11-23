@@ -66,9 +66,9 @@ const App = () => {
 
       {user && user.Token && (
         <AddPlaceForm
-          key={selectedCoords ? `${selectedCoords.lat}-${selectedCoords.lng}` : 'empty'}
           user={user}
           selectedCoords={selectedCoords}
+          onCoordsChange={setSelectedCoords}
           onPlaceAdded={handlePlaceAdded}
           onLocationFound={(coords) => {
             setSelectedCoords(coords);
