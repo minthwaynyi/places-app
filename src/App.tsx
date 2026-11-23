@@ -108,7 +108,7 @@ const App = () => {
 
         {selectedCoords && (
           <Marker position={[selectedCoords.lat, selectedCoords.lng]}>
-            <Popup>New place location</Popup>
+            <Popup>New place ({selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)})</Popup>
           </Marker>
         )}
       </MapContainer>

@@ -45,14 +45,18 @@ export const AddPlaceForm = ({
 
     setLatitude(lat.toFixed(6));
     setLongitude(lng.toFixed(6));
-    if (!name) setName(results[0].display_name.split(',')[0]);
     onLocationFound({ lat, lng });
-    setStatus('Address found! Review details and click Add Place.');
+    setStatus('Address found! Enter a place name and click Add Place.');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('');
+
+    if (!name.trim()) {
+      setStatus('Place name is required.');
+      return;
+    }
 
     if (!user.Token) {
       setStatus('Missing authentication token. Please log in again.');
@@ -66,7 +70,7 @@ export const AddPlaceForm = ({
         Authorization: `Bearer ${user.Token}`,
       },
       body: JSON.stringify({
-        Name: name,
+        Name: name.trim(),
         UserID: user.ID,
         Latitude: parseFloat(latitude),
         Longitude: parseFloat(longitude),
@@ -75,7 +79,7 @@ export const AddPlaceForm = ({
 
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
-        setStatus('Unauthorized. Your session may have expired—please log in again.');
+        setStatus('Unauthorized. Your session may have expired; please log in again.');
       } else {
         setStatus('Failed to add place. Check your inputs.');
       }
