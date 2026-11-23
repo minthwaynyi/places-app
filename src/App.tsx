@@ -4,6 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import type { Place, User } from './types';
 import { LoginForm } from './components/LoginForm';
 import { SignupForm } from './components/SignupForm';
+import { AddPlaceForm } from './components/AddPlaceForm';
+import { MapController } from './components/MapController';
 import { EditPlaceForm } from './components/EditPlaceForm';
 import { DeletePlaceButton } from './components/DeletePlaceButton';
 
@@ -28,6 +30,14 @@ const App = () => {
     return saved ? JSON.parse(saved) : null;
   });
 
+  const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [flyToCoords, setFlyToCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  const handlePlaceAdded = (newPlace: Place) => {
+    setPlaces((prev) => [...prev, newPlace]);
+    setSelectedCoords(null);
+  };
+
   useEffect(() => {
     const getAllPlaces = async () => {
       try {
@@ -48,6 +58,7 @@ const App = () => {
 
   const handleLogout = () => {
     setUser(null);
+    setSelectedCoords(null);
     localStorage.removeItem(STORAGE_KEY);
   };
 
@@ -85,6 +96,19 @@ const App = () => {
       )}
 
       <hr />
+
+      {user && user.Token && (
+        <AddPlaceForm
+          user={user}
+          selectedCoords={selectedCoords}
+          onCoordsChange={setSelectedCoords}
+          onPlaceAdded={handlePlaceAdded}
+          onLocationFound={(coords) => {
+            setSelectedCoords(coords);
+            setFlyToCoords(coords);
+          }}
+        />
+      )}
 
       <ul>
         {places.map((p) => (
@@ -132,7 +156,17 @@ const App = () => {
         ))}
       </ul>
 
-      <MapContainer style={{ height: '400px' }} center={[62.59, 29.77]} zoom={13}>
+      <MapContainer
+        style={{ height: '400px' }}
+        center={[62.59, 29.77]}
+        zoom={13}
+      >
+        <MapController
+          onMapClick={(coords) => {
+            if (user && user.Token) setSelectedCoords(coords);
+          }}
+          flyToCoords={flyToCoords}
+        />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -149,6 +183,12 @@ const App = () => {
             <Popup>{p.Name}</Popup>
           </CircleMarker>
         ))}
+
+        {selectedCoords && (
+          <Marker position={[selectedCoords.lat, selectedCoords.lng]}>
+            <Popup>New place ({selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)})</Popup>
+          </Marker>
+        )}
       </MapContainer>
     </>
   );

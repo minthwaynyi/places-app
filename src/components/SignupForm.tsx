@@ -10,7 +10,7 @@ export const SignupForm = ({ onSignup }: SignupFormProps) => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setMessage('');
 
