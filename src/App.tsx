@@ -6,6 +6,7 @@ import { LoginForm } from './components/LoginForm';
 import { SignupForm } from './components/SignupForm';
 import { EditPlaceForm } from './components/EditPlaceForm';
 import { DeletePlaceButton } from './components/DeletePlaceButton';
+import { ThemeToggle } from './components/ThemeToggle';
 
 const STORAGE_KEY = 'places_app_user';
 
@@ -67,7 +68,11 @@ const App = () => {
   };
 
   return (
+    
     <>
+    <div style={{ textAlign: 'right' }}>
+      <ThemeToggle />
+    </div>
       {user ? (
         <div>
           <p>
@@ -89,14 +94,16 @@ const App = () => {
       <ul>
         {places.map((p) => (
           <li
-            key={p.ID}
-            onClick={() => handleSelect(p.ID)}
-            style={{
-              cursor: 'pointer',
-              fontWeight: p.ID === selectedId ? 'bold' : 'normal',
-              background: p.ID === selectedId ? '#fee2e2' : 'transparent',
-            }}
-          >
+              key={p.ID}
+              className={user && p.UserID === user.ID ? 'owned' : undefined}
+              onClick={() => handleSelect(p.ID)}
+              style={{
+                cursor: 'pointer',
+                background: p.ID === selectedId ? 'var(--selected-bg)' : undefined,
+                padding: '4px 8px',
+                ...(p.ID === selectedId && { borderLeftColor: 'var(--accent)' }),
+              }}
+            >
             {user && editingId === p.ID ? (
               <EditPlaceForm
                 place={p}

@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700&display=swap');
+
+/* ---------- Light theme ---------- */
+:root {
+  color-scheme: light;
+  --font: 'Raleway', system-ui, sans-serif;
+  --bg: #f6fbfb;
+  --surface: #ffffff;
+  --text: #13282a;
+  --border: #c9dddd;
+
+  --primary: #06837f;
+  --on-primary: #ffffff;
+  --accent: #fdc100;
+  --selected-bg: #fff3c4;
+  --hover-bg: #e8f4f3;
+}
+
+/* ---------- Dark theme ---------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0c1516;
+  --surface: #132022;
+  --text: #e6f4f4;
+  --border: #24393b;
+
+  --primary: #02cecb;
+  --on-primary: #06201f;
+  --accent: #fed811;
+  --selected-bg: #3a3410;
+  --hover-bg: #172b2d;
+}
+
+/* ---------- Base ---------- */
+body,
+button,
+input,
+.leaflet-container,
+.leaflet-popup-content {
+  font-family: var(--font);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.2s, color 0.2s;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+h3 {
+  color: var(--primary);
+}
+
+/* ---------- Buttons & inputs ---------- */
+button {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: 999px;
+  padding: 5px 18px;
+  margin-left: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.15s, color 0.15s;
+}
+
+button:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input {
+  font-size: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+ul {
+  list-style-type: none;
+}
+li {
+  border-left: 4px solid transparent;
+}
+
+li:hover {
+  background: var(--hover-bg);
+}
+
+/* Places created by the logged-in user */
+li.owned {
+  font-weight: 700;
+  border-left-color: var(--primary);
+}
+
+/* ---------- Map ---------- */
+.leaflet-container {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.place-dot {
+  stroke: var(--primary);
+  fill: var(--primary);
+  fill-opacity: 0.5;
+}
+
+.place-dot.selected {
+  stroke: var(--accent);
+  fill: var(--accent);
+  fill-opacity: 0.85;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.6));
+}
+
