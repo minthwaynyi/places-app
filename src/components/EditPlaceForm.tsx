@@ -18,7 +18,6 @@ export const EditPlaceForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     if (!name.trim()) return;
 
     const response = await fetch(

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { useState, useEffect, useRef } from 'react';
+import type { CircleMarker as LeafletCircleMarker } from 'leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, useMap, Marker} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Place, User } from './types';
 import { LoginForm } from './components/LoginForm';
@@ -24,12 +25,14 @@ const FlyTo = ({ place }: { place?: Place }) => {
 
 const App = () => {
   const [places, setPlaces] = useState<Place[]>([]);
+  const markerRefs = useRef<Record<number, LeafletCircleMarker | null>>({});
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : null;
   });
+
 
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [flyToCoords, setFlyToCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -66,6 +69,7 @@ const App = () => {
   const handleSelect = (id: number) => {
     setSelectedId(id);
     if (editingId !== id) setEditingId(null);
+    markerRefs.current[id]?.openPopup();
   };
 
   const handlePlaceSaved = (id: number, name: string) => {
@@ -182,10 +186,16 @@ const App = () => {
         {places.map((p) => (
           <CircleMarker
             key={p.ID}
+            ref={(el) => {
+              markerRefs.current[p.ID] = el;
+              }}
             center={[p.Latitude, p.Longitude]}
             radius={p.ID === selectedId ? 14 : 8}
             pathOptions={{ color: p.ID === selectedId ? '#e11d48' : '#2563eb' }}
-            eventHandlers={{ click: () => handleSelect(p.ID) }}
+            eventHandlers={{
+              click: () => handleSelect(p.ID),
+              popupclose: () => setSelectedId((cur) => (cur === p.ID ? null : cur)),
+            }}
           >
             <Popup>{p.Name}</Popup>
           </CircleMarker>
